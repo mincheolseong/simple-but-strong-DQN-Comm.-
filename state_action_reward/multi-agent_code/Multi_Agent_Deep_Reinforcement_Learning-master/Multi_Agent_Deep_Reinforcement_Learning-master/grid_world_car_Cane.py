@@ -45,7 +45,7 @@ class Car(object):
     
     def choose_action(self,state,model,epsilon,num_actions,observation_shape,demand=None):
         if model == 'Naive':
-            closest_demand = self.getClosestDemand(demand)
+            closest_demand = self.getClosestDemand(demand) #((customer.location, 거리)를 리턴함)
             action = self.makeNaiveMove(closest_demand)
             return action
         else:
@@ -61,10 +61,10 @@ class Car(object):
         dist = abs(car[0]-cust[0]) + abs(car[1]-cust[1])
         return dist
 
-    def getClosestDemand(self,demand):
+    def getClosestDemand(self,demand): #closet_deman((customer.location, 거리)를 리턴함)
         (x,y) = self.location
         closest_demand = None
-        for d in demand:
+        for d in demand: #d는 customer.location 반복 호출
             dist = self.getDist((x,y),(d[0],d[1]))
             if closest_demand == None or dist < closest_demand[1]:
                 closest_demand = (d, dist)

@@ -85,14 +85,15 @@ class GridWorld(object):
             intended_actions[car] = (state, action)
         return intended_actions
             
-    def actual_step(self,intended_actions):
+    def actual_step(self,intended_actions): #이것이 실제로 multi-agent 코드를 구별짓는 정의!!!(return : all_agents_step)
         all_agents_step = []
         for car in self.cars_list:
             agent_step = {}
             agent_step['car_obj'] = car
             agent_step['carID'] = car.carID
             agent_step['original_location'] = car.location
-            
+            #agent_step{'car_obj' : car, 'carID' : car.carID, 'original_location' : car.location,
+            # 'event' : , 'new_location' : , 'reward' : ,  'action' : action, 'state' : state}
             state = intended_actions[car][0]
             action = intended_actions[car][1]
             agent_step = self.makeMove(car,action,agent_step)
@@ -101,15 +102,19 @@ class GridWorld(object):
             agent_step['state'] = state
             all_agents_step.append(agent_step)
         
-        self.update_demand() 
+        self.update_demand() #Decrement and remove demand if timer is up
         for agent_step in all_agents_step:
             car = agent_step['car_obj'] 
             new_state = self.get_state_view(car.carID, self.cars_grid, self.cust_grid)
+            #get_state_view : 해당 위치의 car의 carID 불일치 & 어떤 car 있으면 1 + cust_grid + 해당 위치 carID 일치시 1 + 장애물 좌표
             agent_step['new_state'] = new_state
+            # agent_step{'car_obj' : car, 'carID' : car.carID, 'original_location' : car.location,
+            # 'event' : , 'new_location' : , 'reward' : ,  'action' : action, 'state' : state, 'new_state' : new_state}
             
         return all_agents_step
     
     def makeMove(self,Car,action,agent_step):
+        #intended_action에 따라서 out of grid, collision, pick up customer, standard movement 총 4가지 경우에 따라 agent_step 업데이트(with reward)
         car_locations = self.getCarlocs()
         customer_locations = self.getCustomerlocs()
         (x,y) = self.convert_action_to_loc(Car, action)
@@ -123,6 +128,7 @@ class GridWorld(object):
             
         #Collision with other agent or wall
         elif ((x,y) in car_locations and (x,y) != agent_step['original_location']) or self.obstacle_grid[x, y] == 1:
+            #앞에께 collision with other agent 뒤에께 collision with wall
             agent_step['event'] = 'collision'
             agent_step['new_location'] = agent_step['original_location']
             agent_step['reward'] = self.penalty_per_collision
@@ -173,7 +179,7 @@ class GridWorld(object):
             rand_loc = self.get_car_random_loc()
             this_car = Car(i, rand_loc, self.grid_size, self.reward_backprop_rate, self.reward_others_discount_rate)
             self.cars_list.append(this_car)
-            self.add_car_to_specific_loc(this_car, rand_loc)
+            self.add_car_to_specific_loc(this_car, rand_loc) #self.cars_grid[loc] = car.carID ; 해당 위치(loc)에 carID 삽입
         return self.cars_list 
     
     def initiate_static_cars(self, car_list):
@@ -184,7 +190,7 @@ class GridWorld(object):
             loc = car.location
             this_car = Car(car.carID, loc, self.grid_size, self.reward_backprop_rate, self.reward_others_discount_rate)
             self.cars_list.append(this_car)
-            self.add_car_to_specific_loc(this_car, loc)
+            self.add_car_to_specific_loc(this_car, loc) #self.cars_grid[loc] = car. ; 해당 위치(loc)에 carID 삽입
             #i += 1
         return self.cars_list 
          
@@ -291,15 +297,15 @@ class GridWorld(object):
         print " "  + "------" * (self.grid_size - 1)
 
     def get_state_view(self, carID, cars_grid, cust_grid):
-        state = np.zeros((4, self.grid_size, self.grid_size))
+        state = np.zeros((4, self.grid_size, self.grid_size)) #grid를 4개 만든다고 생각하면 됨
         cars_grid_self = np.zeros((self.grid_size, self.grid_size))
-        cars_grid_self[cars_grid == carID] = 1
+        cars_grid_self[cars_grid == carID] = 1 #해당 위치에 해당 car가 있으면 1로 반환
         cars_grid_others = np.zeros((self.grid_size, self.grid_size))
         cars_grid_others[(cars_grid != carID) & (cars_grid != 0)] = 1
-        state[2, :, :] = cars_grid_self
-        state[0, :, :] = cars_grid_others
+        state[2, :, :] = cars_grid_self #해당 위치에 해당 car가 있으면 1로 반환
+        state[0, :, :] = cars_grid_others #해당 위치의 car의 carID가 불일치하고 car가 있긴 있다면 1로 반환
         state[1, :, :] = cust_grid.copy()
-        state[3, :, :] = self.obstacle_grid
+        state[3, :, :] = self.obstacle_grid #장애물 좌표
         return state    
     
     def loadObstacleGrid(self,obstacle_grid):
