@@ -8,7 +8,7 @@ from src.base.BaseDisplay import BaseDisplay
 
 class BaseEnvironmentParams:
     def __init__(self):
-        self.model_stats_params = ModelStatsParams()
+        self.model_stats_params = ModelStatsParams() #model save 경로와 moving average length 등 초기화 설정
 
 
 class BaseEnvironment:

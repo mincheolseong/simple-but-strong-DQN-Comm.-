@@ -1,7 +1,7 @@
 import collections
 import datetime
 import os
-import shutil
+import shutil #shutil 모듈은 파일과 파일 모음에 대한 여러 가지 고수준 연산을 제공합니다. 특히, 파일 복사와 삭제를 지원하는 함수가 제공됩니다. 
 
 import tensorflow as tf
 import numpy as np
